@@ -1,38 +1,47 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import { serverConfig, type ServerConfig, type InsertServerConfig, type UpdateServerConfig } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getConfig(): Promise<ServerConfig>;
+  updateConfig(updates: UpdateServerConfig): Promise<ServerConfig>;
+  setRunning(isRunning: boolean): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getConfig(): Promise<ServerConfig> {
+    const configs = await db.select().from(serverConfig).limit(1);
+    if (configs.length === 0) {
+      // Create default config
+      const defaultConfig: InsertServerConfig = {
+        uuid: uuidv4(),
+        path: "/vmess",
+        port: 10000,
+        sni: "example.com",
+      };
+      const [newConfig] = await db.insert(serverConfig).values(defaultConfig).returning();
+      return newConfig;
+    }
+    return configs[0];
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async updateConfig(updates: UpdateServerConfig): Promise<ServerConfig> {
+    // We only have one row, so we update the one with existing ID or the first one
+    const current = await this.getConfig();
+    const [updated] = await db.update(serverConfig)
+      .set(updates)
+      .where(eq(serverConfig.id, current.id))
+      .returning();
+    return updated;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async setRunning(isRunning: boolean): Promise<void> {
+    const current = await this.getConfig();
+    await db.update(serverConfig)
+      .set({ isRunning })
+      .where(eq(serverConfig.id, current.id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
