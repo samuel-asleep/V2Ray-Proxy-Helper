@@ -29,7 +29,7 @@ COPY client ./client
 RUN npm run build 2>/dev/null || true
 
 # Run database migrations in builder stage
-RUN npm run db:push
+
 
 # Ensure /app/dist exists so the later COPY from builder won't fail if build produced nothing
 RUN mkdir -p /app/dist
