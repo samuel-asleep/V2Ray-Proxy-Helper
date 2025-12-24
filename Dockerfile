@@ -20,19 +20,15 @@ RUN npm ci
 
 # Copy source code
 COPY tsconfig.json ./
+COPY vite.config.ts ./
 COPY server ./server
 COPY drizzle.config.ts ./
 COPY shared ./shared
 COPY client ./client
+COPY script ./script
 
-# Build the application (if using TypeScript)
-RUN npm run build 2>/dev/null || true
-
-# Run database migrations in builder stage
-
-
-# Ensure /app/dist exists so the later COPY from builder won't fail if build produced nothing
-RUN mkdir -p /app/dist
+# Build the application
+RUN npm run build
 
 # Stage 2: Runtime stage
 FROM node:20-alpine
