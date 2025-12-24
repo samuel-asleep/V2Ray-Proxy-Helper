@@ -1,5 +1,3 @@
-# Multi-stage build for V2Ray + Node.js application
-
 # Stage 1: Build stage
 FROM node:20-alpine as builder
 
@@ -29,6 +27,9 @@ COPY client ./client
 # Build the application (if using TypeScript)
 RUN npm run build 2>/dev/null || true
 
+# Run database migrations in builder stage
+RUN npm run db:push
+
 # Ensure /app/dist exists so the later COPY from builder won't fail if build produced nothing
 RUN mkdir -p /app/dist
 
@@ -50,7 +51,7 @@ COPY package*.json ./
 
 # Install production dependencies only
 RUN npm ci --only=production
-RUN npm run db:push
+
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
