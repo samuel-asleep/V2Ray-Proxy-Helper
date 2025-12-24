@@ -22,15 +22,27 @@ export async function registerRoutes(
 
   // Handle Upgrade requests manually
   httpServer.on('upgrade', async (req, socket, head) => {
-    const currentConfig = await storage.getConfig();
-    if (req.url === currentConfig.path) {
-      console.log(`Proxying WebSocket request for ${req.url} to port ${currentConfig.port}`);
-      proxy.ws(req, socket, head, {
-        target: `ws://127.0.0.1:${currentConfig.port}`,
-      }, (err) => {
-        console.error('Proxy error:', err);
-        socket.end();
-      });
+    try {
+      const currentConfig = await storage.getConfig();
+      const requestPath = req.url?.split('?')[0]; // Remove query params
+      
+      if (requestPath === currentConfig.path) {
+        console.log(`[PROXY] WebSocket upgrade request: ${req.url} -> ws://127.0.0.1:${currentConfig.port}${currentConfig.path}`);
+        proxy.ws(req, socket, head, {
+          target: `ws://127.0.0.1:${currentConfig.port}`,
+        }, (err) => {
+          console.error('[PROXY] Error:', err.message);
+          socket.destroy();
+        });
+      } else {
+        console.log(`[PROXY] Path mismatch: ${requestPath} !== ${currentConfig.path}`);
+        socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+        socket.destroy();
+      }
+    } catch (err: any) {
+      console.error('[PROXY] Exception:', err.message);
+      socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+      socket.destroy();
     }
   });
 
