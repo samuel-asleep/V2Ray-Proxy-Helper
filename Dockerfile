@@ -50,7 +50,7 @@ COPY package*.json ./
 
 # Install production dependencies only
 RUN npm ci --only=production
-RUN npm db:push
+RUN npm run db:push
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
