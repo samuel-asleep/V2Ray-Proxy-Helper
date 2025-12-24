@@ -29,6 +29,9 @@ COPY client ./client
 # Build the application (if using TypeScript)
 RUN npm run build 2>/dev/null || true
 
+# Ensure /app/dist exists so the later COPY from builder won't fail if build produced nothing
+RUN mkdir -p /app/dist
+
 # Stage 2: Runtime stage
 FROM node:20-alpine
 
@@ -48,7 +51,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Copy built application from builder
-COPY --from=builder /app/dist ./dist 2>/dev/null || true
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/client ./client
@@ -70,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["/sbin/dumb-init", "--"]
 
 # Run the application
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev"] 
