@@ -46,8 +46,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install all dependencies (including drizzle-kit for migrations)
+RUN npm ci --omit=optional
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
@@ -55,6 +55,11 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/client ./client
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/drizzle.config.ts ./
+
+# Copy startup script
+COPY start.sh ./
+RUN chmod +x ./start.sh
 
 # Expose ports
 ARG PORT=5000
@@ -68,5 +73,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use dumb-init to handle signals properly (let system find it in PATH)
 ENTRYPOINT ["dumb-init", "--"]
 
-# Use a production start command — update to the correct entrypoint file or ensure package.json has a "start" script
-CMD ["npm", "start"]
+# Use startup script that runs migrations then starts the app
+CMD ["./start.sh"]
