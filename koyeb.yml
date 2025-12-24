@@ -1,0 +1,23 @@
+version: 1
+
+services:
+  web:
+    build:
+      dockerfile: Dockerfile
+    env:
+      PORT: 8000
+      NODE_ENV: production
+    http:
+      routes:
+        - path: /
+          port: 8000
+    health:
+      http:
+        path: /api/status
+        port: 8000
+      initial_delay: 10
+      period: 30
+
+  database:
+    postgres:
+      version: 16

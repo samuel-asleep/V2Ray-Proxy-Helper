@@ -55,13 +55,16 @@ COPY --from=builder /app/client ./client
 COPY --from=builder /app/tsconfig.json ./
 
 # Expose ports
-# 5000: Main application port (web interface + proxying)
-# 10000: Internal V2Ray WebSocket port
-EXPOSE 5000 10000
+# Port from environment (Koyeb uses PORT env var, default 8000 or 5000)
+ARG PORT=5000
+EXPOSE ${PORT}
+
+# Also expose V2Ray internal port
+EXPOSE 10000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:5000/api/status || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-5000}/api/status || exit 1
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["/sbin/dumb-init", "--"]
