@@ -1,6 +1,6 @@
-const https = require('https');
-const dns = require('dns').promises;
-const tls = require('tls');
+import https from 'https';
+import { promises as dns } from 'dns';
+import tls from 'tls';
 
 /**
  * Test if a domain is suitable for SNI spoofing in V2Ray
@@ -102,7 +102,8 @@ async function testSNI(domain) {
 async function runTests() {
   const domains = [
     'www.airtel.africa',
-    'www.google.com', // Control test
+    'www.google.com',
+    'www.youtube.com'// Control test
   ];
 
   for (const domain of domains) {
