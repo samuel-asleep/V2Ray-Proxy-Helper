@@ -10,6 +10,10 @@ packages = ["v2ray"]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 10000
+externalPort = 3000
+
 [env]
 PORT = "5000"
 
