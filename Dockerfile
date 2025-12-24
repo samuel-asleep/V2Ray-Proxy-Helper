@@ -21,6 +21,7 @@ RUN npm ci
 # Copy source code
 COPY tsconfig.json ./
 COPY server ./server
+COPY drizzle.config.ts ./
 COPY shared ./shared
 COPY client ./client
 
