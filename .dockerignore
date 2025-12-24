@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+README.md
+*.md
+.vscode
+.idea
+.DS_Store
+coverage
+.nyc_output
+v2ray_config.json

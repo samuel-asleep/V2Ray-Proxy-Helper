@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  v2ray-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: v2ray-server
+    ports:
+      - "5000:5000"    # Web interface & HTTP proxy
+      - "10000:10000"  # V2Ray WebSocket (internal)
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DATABASE_URL=postgresql://user:password@postgres:5432/v2ray
+    volumes:
+      - ./data:/app/data
+      - ./v2ray_config.json:/app/v2ray_config.json:ro
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - v2ray-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: v2ray-postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=v2ray
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - v2ray-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d v2ray"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  v2ray-net:
+    driver: bridge
