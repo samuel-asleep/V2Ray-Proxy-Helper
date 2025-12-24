@@ -74,3 +74,18 @@
 .glow-text {
   text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
 }
+
+/* Hide Replit dev banner and branding */
+[data-testid="replit-banner"],
+[class*="replit"],
+[class*="dev-banner"],
+.replit-ui-button,
+.replit-dev-banner {
+  display: none !important;
+}
+
+/* Also hide any iframes or scripts injected by Replit */
+iframe[src*="replit"],
+script[src*="replit"] {
+  display: none !important;
+}
